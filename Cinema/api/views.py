@@ -9,8 +9,15 @@ from . import serializers
 
 # Create your views here.
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def movies(request):
+    if request.method == 'POST':
+        serializer = serializers.SerializedMovie(data=request.data, partial=False)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     movies = models.Movie.objects.all()
     serialized_movies = serializers.SerializedMovie(movies, many=True)
     return Response(serialized_movies.data, status=status.HTTP_200_OK)
