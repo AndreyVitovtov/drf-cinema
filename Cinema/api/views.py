@@ -23,10 +23,24 @@ def movies(request):
     return Response(serialized_movies.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def movie(request, slug):
-    movie = models.Movie.objects.get(slug=slug)
-    serialized_movie = serializers.SerializedMovie(movie)
+    global serialized_movie
+    if request.method == 'PUT':
+        old_model = models.Movie.objects.get(slug=slug)
+        serialized_movie = serializers.SerializedMovie(old_model, data=request.data, partial=False)
+        if serialized_movie.is_valid():
+            serialized_movie.save()
+
+    if request.method == 'DELETE':
+        old_model = models.Movie.objects.get(slug=slug)
+        old_model.delete()
+        return Response({'deleted': True}, status=status.HTTP_200_OK)
+
+    if request.method == 'GET':
+        movie = models.Movie.objects.get(slug=slug)
+        serialized_movie = serializers.SerializedMovie(movie)
+
     return Response(serialized_movie.data, status=status.HTTP_200_OK)
 
 
